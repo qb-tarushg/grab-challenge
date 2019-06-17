@@ -56,7 +56,7 @@ class FilterNonRGBCarImages(PreProcess):
             if record is None:
                 break
             imgfile, label = record
-            img = plt.imread(os.path.join(self.image_folder, imgfile))
+            img = plt.imread(os.path.join(self.img_folder, imgfile))
 
             if self._check_rgb(img):
                 self.non_rgb.append(record)
