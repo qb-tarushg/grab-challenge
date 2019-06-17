@@ -10,3 +10,14 @@ Given a dataset of distinct car images, can you automatically recognize the car 
 ## Pipeline
 
 The steps are detailed under jupyter notebook `Pipeline.ipynb`.
+
+### Evaluate the model
+
+Run code as :
+
+`car_net.evaluate(test_loader)`
+
+### Using Predict Method as below 
+
+* `test_iter = iter(test_loader)`
+* `car_net.predict(test_iter.next()[0], k=3)`
