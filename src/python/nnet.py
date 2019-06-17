@@ -43,7 +43,7 @@ class CarNet(nn.Module):
         chkpnt_folder=None,
     ):
         # TODO: Add option for loading models which are trained.
-        super(CarNet, self).__init__()
+        super().__init__()
         if device is not None:
             self.device = device
         else:
