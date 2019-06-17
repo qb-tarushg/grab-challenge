@@ -69,8 +69,8 @@ class CarNet(nn.Module):
         for epoch in range(epochs):
             print(f"Running epoch {epoch + 1}/{epochs}")
             print("-" * 15)
-            self._train_step(train_dataloader)
-            _, epoch_acc = self._validation_step(val_dataloader)
+            self._train_step(train_dataloader, epoch)
+            _, epoch_acc = self._validation_step(val_dataloader, epoch)
 
             if epoch_acc > best_acc:
                 best_acc = epoch_acc
@@ -153,7 +153,7 @@ class CarNet(nn.Module):
                 corrects += torch.sum(preds == labels.data)
         return corrects.double() / len(test_dataloader.dataset) * 100
 
-    def _validation_step(self, dataloader, epoch, step, verbose):
+    def _validation_step(self, dataloader, epoch, verbose=True):
         start = time.time()
         self.model.eval()
         epoch_loss, epoch_acc = self._run(dataloader, VALIDATION_STEP)
