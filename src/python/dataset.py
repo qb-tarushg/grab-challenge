@@ -8,103 +8,19 @@ from torch.utils import data as data
 
 # from torchvision import datasets, models, transforms
 
-# import pathlib
-# from abc import ABC, abstractmethod
-# from typing import Dict
-
-
-# AUTOTUNE = tf.data.experimental.AUTOTUNE
-
-
-# def get_image_paths(base_path):
-#     data_root = pathlib.Path(base_path)
-#     return [str(item) for item in data_root.iterdir()]
-
-
-# def load_image(path):
-#     image = tf.io.read_file(path)
-#     return tf.image.decode_jpeg(image, channels=3)
-
-
-# def preprocess_image(image):
-#     image = tf.image.resize(image, [224, 224])
-#     image /= 255.0
-#     return image
-
-
-# class Dataset(ABC):
-#     @abstractmethod
-#     def load_train(self):
-#         pass
-
-#     @abstractmethod
-#     def load_test(self):
-#         pass
-
-#     @abstractmethod
-#     def load_train_labels(self):
-#         pass
-
-#     @abstractmethod
-#     def load_test_labels(self):
-#         pass
-
-
-# class CarDataset(Dataset):
-#     def __init__(self, path_dict: Dict):
-#         # TODO add path check test
-#         self._train_dir_path = path_dict["train_dir"]
-#         self._test_dir_path = path_dict["test_dir"]
-#         self._train_label_path = path_dict["train_label_dir"]
-#         self._test_label_path = path_dict["test_label_dir"]
-
-#     def load_train(self):
-#         path_ds = tf.data.Dataset.from_tensor_slices(
-#             get_image_paths(self._train_dir_path)
-#         )
-#         return path_ds.map(load_image, num_parallel_calls=AUTOTUNE)
-
-#     def load_test(self):
-#         path_ds = tf.data.Dataset.from_tensor_slices(
-#             get_image_paths(self._test_dir_path)
-#         )
-#         return path_ds.map(load_image, num_parallel_calls=AUTOTUNE)
-
-#     def load_train_labels(self):
-#         return tf.data.Dataset.from_tensor_slices(
-#             tf.cast(self._get_labels(self._train_label_path), tf.int64)
-#         )
-
-#     def load_test_labels(self):
-#         return tf.data.Dataset.from_tensor_slices(
-#             tf.cast(self._get_labels(self._test_label_path), tf.int64)
-#         )
-
-#     def _get_labels(self, path: str) -> np.ndarray:
-#         annotations = sio.loadmat(path)["annotations"]
-#         _, nlabels = annotations.shape
-#         labels = np.array(
-#             [int(annotations[:, i][0][4][0]) for i in range(nlabels)]
-#         )
-#         return labels
-
-#     def get_car_classes(self, path) -> np.ndarray:
-#         carsMat = sio.loadmat(path)
-#         _, nclasses = carsMat["class_names"].shape
-#         cars_classes = np.array(
-#             [
-#                 (i + 1, carsMat["class_names"][:, i][0][0])
-#                 for i in range(nclasses)
-#             ]
-#         )
-#         return cars_classes
-
 
 def read_image_file(path):
     return torch.from_numpy(plt.imread(path))
 
 
-class CarDatasetV2(data.Dataset):
+def split(dataset, split_ratio=0.4):
+    total_len = len(dataset)
+    first_len = int(split_ratio * total_len)
+    second_len = total_len - first_len
+    return data.dataset.random_split(dataset, lengths=[first_len, second_len])
+
+
+class CarDataset(data.Dataset):
     def __init__(
         self,
         file_dir,
@@ -181,3 +97,42 @@ class CarDatasetV2(data.Dataset):
         return os.path.exists(self._img_dir_path) or os.path.exists(
             self._label_dir_path
         )
+
+
+class StanfordCarDataset(data.Dataset):
+    """The class represents the stanford car dataset. It assumes the dataset is downloaded.
+    Args:
+        image_folder (str): The path to image folder where images are kept.
+        image_meta (list): List of tuples `(image_name, label)`.
+        transform : Transformations which are to be applied on images.
+        label_transform : Transformations which are to be applied on labels or class ids.
+    """
+
+    def __init__(self, image_folder, image_meta, transform, label_transform):
+        self._image_folder = os.path.expanduser(image_folder)
+        self._image_meta = image_meta
+        self.transform = transform
+        self.label_transform = label_transform
+
+        if not self._check_exists():
+            raise FileNotFoundError(
+                f"Image files doesn't exists {self._image_folder}"
+            )
+
+    def _check_exists(self):
+        return os.path.exists(self._image_folder)
+
+    def __len__(self):
+        return len(self._image_meta)
+
+    def __getitem__(self, index):
+        image_name, label = self._image_meta[index]
+        img = Image.open(os.path.join(self._image_folder, image_name))
+
+        if self.transform is not None:
+            img = self.transform(img)
+
+        if self.label_transform is not None:
+            label = self.label_transform(label)
+
+        return img, label
