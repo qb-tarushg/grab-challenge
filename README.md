@@ -21,3 +21,12 @@ Run code as :
 
 * `test_iter = iter(test_loader)`
 * `car_net.predict(test_iter.next()[0], k=3)`
+
+### Load the model from checkpoint
+
+```python
+car_net = CarNet(NUM_CLASSES, require_chkpoint=True, chkpnt_folder=checkpoint_folder)
+car_net.load_checkpoint("best_fit_model.pt")
+```
+
+And then you can run the evaluation as mentioned above
