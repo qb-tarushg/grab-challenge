@@ -129,8 +129,8 @@ class CarNet(nn.Module):
             running_corrects += torch.sum(preds == batch_labels.data)
 
         epoch_loss, epoch_acc = (
-            running_loss / len(dataloader),
-            running_corrects.double() / len(dataloader),
+            running_loss / len(dataloader.dataset),
+            running_corrects.double() / len(dataloader.dataset),
         )
         return epoch_loss, epoch_acc
 
@@ -151,7 +151,7 @@ class CarNet(nn.Module):
                 outputs = self.forward(inputs)
                 _, preds = torch.max(outputs, 1)
                 corrects += torch.sum(preds == labels.data)
-        return corrects.double() / len(test_dataloader) * 100
+        return corrects.double() / len(test_dataloader.dataset) * 100
 
     def _validation_step(self, dataloader, epoch, step, verbose):
         start = time.time()
